@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Giriş / Kayıt</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #5c3a21;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .auth-container {
+      background: #a67c52;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 300px;
+    }
+    h2 {
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #toggleForm {
+      background-color: #2196F3;
+    }
+    #message {
+      text-align: center;
+      color: red;
+      margin-top: 10px;
+    }
+    .header {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: bold;
+      color: #5c3a21;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="index.html" style="text-decoration: none; color: black;">MCDB</a>
+  </div>
+
+  <div class="auth-container">
+    <h2 id="formTitle">Login</h2>
+    <input type="email" id="email" placeholder="Email address">
+    <input type="password" id="password" placeholder="Password">
+    <input type="password" id="confirmPassword" placeholder="Password again" style="display: none;">
+    <button id="submitBtn" onclick="handleAuth()">Login</button>
+    <button id="toggleForm" onclick="toggleForm()">Sign in</button>
+    <div id="message"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCHVf0hw5VreBnTeKSaDoTf-TvOsiv7tCM",
+      authDomain: "mcdb-affa0.firebaseapp.com",
+      projectId: "mcdb-affa0",
+      storageBucket: "mcdb-affa0.firebasestorage.app",
+      messagingSenderId: "464835210126",
+      appId: "1:464835210126:web:e3f34aba48cc4faff252df",
+      measurementId: "G-CB8HK6VM83"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    let isLogin = true;
+
+    window.toggleForm = function () {
+      isLogin = !isLogin;
+      document.getElementById("formTitle").innerText = isLogin ? "Login" : "Sign in";
+      document.getElementById("submitBtn").innerText = isLogin ? "Login" : "Sign in";
+      document.getElementById("toggleForm").innerText = isLogin ? "Sign in" : "Login";
+      document.getElementById("confirmPassword").style.display = isLogin ? "none" : "block";
+      document.getElementById("message").innerText = "";
+    }
+
+    window.handleAuth = function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const messageDiv = document.getElementById("message");
+
+      if (!email || !password || (!isLogin && !confirmPassword)) {
+        messageDiv.innerText = "Please fill in all fields.";
+        return;
+      }
+
+      if (!isLogin && password !== confirmPassword) {
+        messageDiv.innerText = "Passwords do not match.";
+        return;
+      }
+
+      if (isLogin) {
+        signInWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            messageDiv.style.color = "green";
+            messageDiv.innerText = "Loading...";
+            setTimeout(() => {
+              window.location.href = "anasayfa.html";
+            }, 1500);
+          })
+          .catch((error) => {
+            messageDiv.style.color = "red";
+            messageDiv.innerText = error.message;
+          });
+      } else {
+        createUserWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            messageDiv.style.color = "green";
+            messageDiv.innerText = "Registration successful.";
+            toggleForm();
+          })
+          .catch((error) => {
+            messageDiv.style.color = "red";
+            messageDiv.innerText = error.message;
+          });
+      }
+    }
+  </script>
+</body>
+</html>
