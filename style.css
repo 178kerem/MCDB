@@ -182,7 +182,7 @@ body.background {
   font-weight: bold;
 }
 
-/* Kategori Menüsüne Ait Yeni Stil */
+
 .category-menu {
   position: absolute;
   top: 50px;
@@ -219,7 +219,7 @@ body.background {
   background-color: #555;
 }
 
-/* Menüyü Açma Butonuna Stil */
+
 .menu-btn {
   background: none;
   border: none;
@@ -228,5 +228,5 @@ body.background {
   cursor: pointer;
 }
 .popular-section h2 {
-  text-align: center; /* Ortada hizalamak için */
+  text-align: center; 
 }
