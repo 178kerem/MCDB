@@ -217,7 +217,7 @@
             <p><strong>Year:</strong> ${movie.year} | <strong>Genre:</strong> ${movie.genre}</p>
             <p><strong>Director:</strong> ${movie.director}</p>
             <p>${movie.movie_info}</p>
-            <p><strong>Average Rating:</strong> <span class="avg-rating">${movie.average_rating ?? "Not yet rated"}</span></p>
+            <p><strong>MCDB Rating:</strong> <span class="avg-rating">${movie.average_rating ?? "Not yet rated"}</span></p>
             ${container.id !== 'top5' ? `
               <div class="rating-form" data-id="${movie.id}">
                 ${[1,2,3,4,5].map(n=>`<span class="star" data-value="${n}">&#9733;</span>`).join('')}
