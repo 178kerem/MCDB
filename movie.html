@@ -1,270 +1,225 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Movie Detail</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MovieSphere - Film Detay</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: Arial, sans-serif; background: #2b2b2b; color: #fff; margin: 0; padding: 0; }
-    header { background: #1c1c1c; padding: 20px; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-    .header-title { margin: 0 auto; color: #ffcc00; font-size: 28px; cursor: pointer; }
-    .profile-link { color: #ffcc00; font-weight: bold; text-decoration: none; font-size: 16px; }
-    #details { padding: 30px; overflow: auto; }
-    #details img { width: 200px; height: 300px; object-fit: cover; border-radius: 8px; float: left; margin-right: 20px; }
-    #details h2 { color: #ffcc00; margin-top: 0; }
-    #details p { margin: 10px 0; line-height: 1.4; }
-    .star { font-size: 24px; cursor: pointer; color: #ccc; }
-    .star.selected { color: gold; }
-    #ratingForm { margin-top: 20px; clear: both; }
-    #commentsSection { padding: 30px; clear: both; }
-    #commentList .comment { background: #333; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
-    #commentForm textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-    #commentForm button { margin-top: 10px; padding: 10px 20px; background: #ffcc00; border: none; cursor: pointer; font-weight: bold; }
-    .comment-rating { margin-top: 8px; }
-    .comment-star { font-size: 18px; cursor: pointer; color: #bbb; }
-    .comment-star.selected { color: gold; }
-    .comment-star.avg { color: #ffdf70; }
-    .comment-rating-label { margin-left: 10px; font-size: 14px; color: #ccc; }
-    /* Similar Movies */
-    #similarSection { padding: 30px; }
-    #similarMovies { display: flex; gap: 16px; flex-wrap: wrap; }
-    .similar-movie {
-      text-align: center;
-      width: 110px;
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(120deg, #2c3e50, #3498db);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
     }
-    .similar-movie img {
-      width: 90px; height: 130px;
-      object-fit: cover;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px #0003;
-      background: #1c1c1c;
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background-color: #1c1c1c;
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      color: #eee;
     }
-    .similar-movie-title {
-      margin-top: 8px;
-      font-size: 14px;
-      color: #ffcc00;
-      text-decoration: none;
+    .poster {
+      flex: 1 1 300px;
+      max-width: 300px;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.7);
+    }
+    .poster img {
+      width: 100%;
       display: block;
-      word-break: break-word;
     }
+    .details {
+      flex: 2 1 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    h1 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 2rem;
+      color: #f39c12;
+    }
+    p {
+      margin: 0;
+      line-height: 1.5;
+      font-size: 1rem;
+    }
+    .back-btn {
+      margin-bottom: 2rem;
+      align-self: flex-start;
+      background: #f39c12;
+      border: none;
+      color: #1c1c1c;
+      font-weight: 700;
+      padding: 0.7rem 1.5rem;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(243,156,18,0.5);
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .back-btn:hover {
+      background: #e67e22;
+      color: #fff;
+    }
+    @media (max-width: 700px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .poster, .details {
+        max-width: 100%;
+        flex: 1 1 100%;
+      }
+    }
+    .star-rating {
+  display: flex;
+  gap: 4px;
+  font-size: 1.5rem;
+  color: #ddd;
+  user-select: none;
+}
+
+.star-rating > span {
+  position: relative;
+  cursor: default;
+  width: 1.5rem;
+  display: inline-block;
+  color: #ddd;
+}
+
+.star-rating > span.full {
+  color: #f39c12;
+}
+
+.star-rating > span.half {
+  color: #ddd;
+}
+
+.star-rating > span.half::before {
+  content: "★";
+  color: #f39c12;
+  position: absolute;
+  width: 50%;
+  overflow: hidden;
+  left: 0;
+  top: 0;
+}
+
+
   </style>
 </head>
 <body>
-  <header>
-    <h1 class="header-title" onclick="location.href='index.html'">MCDB</h1>
-    <a class="profile-link" id="profileLink" href="login.html">Login</a>
-  </header>
 
-  <div id="details"><p>Loading...</p></div>
+  <a href="index.html" class="back-btn">← Go Back</a>
 
-  <div id="commentsSection">
-    <h3 style="color:#ffcc00;">Comments</h3>
-    <div id="commentList"></div>
-    <form id="commentForm">
-      <textarea name="comment" rows="3" placeholder="Write your comment..."></textarea>
-      <button type="submit">Post Comment</button>
-    </form>
-  </div>
-
-  <!-- Similar Movies Section -->
-  <div id="similarSection">
-    <h3 style="color:#ffcc00;">Similar Movies</h3>
-    <div id="similarMovies"></div>
+  <div class="container" id="movieContainer">
+    
   </div>
 
   <script>
-    let currentUser = null;
-    fetch('/me').then(async r => {
-      if (r.ok) {
-        const user = await r.json();
-        currentUser = user;
-        const link = document.getElementById('profileLink');
-        link.textContent = user.username;
-        link.href = 'profile.html';
-      }
-    });
+    const apiKey = '88c299de'; 
 
-    const params = new URLSearchParams(window.location.search);
-    const movieId = params.get('id');
-    let currentMovieName = '';
+   
+    const urlParams = new URLSearchParams(window.location.search);
+    const imdbID = urlParams.get('id');
 
-    if (!movieId) {
-      document.getElementById('details').innerHTML = '<p>Movie not found.</p>';
-    } else {
-      fetchMovieDetail();
-    }
+    const container = document.getElementById('movieContainer');
 
-    async function fetchMovieDetail() {
-      const res = await fetch(`/movie/${movieId}`);
-      if (!res.ok) {
-        document.getElementById('details').innerHTML = '<p>Loading error.</p>';
-        return;
-      }
-      const m = await res.json();
-      renderDetail(m);
-    }
-
-    function renderDetail(m) {
-      currentMovieName = m.movie_name;
-      const c = document.getElementById('details');
-      let starsHtml = '';
-      // Ortalamayı 0.1 hassasiyetle al
-      const avg = Number(m.average_rating) || 0;
-      for (let i = 1; i <= 5; i++) {
-        let className = "star";
-        if (i <= Math.floor(avg)) {
-          className += " selected";
-        } else if (i - avg < 1 && i > avg) {
-          className += " selected";
+    async function fetchMovieDetails(id) {
+      try {
+        const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}&plot=full`);
+        const data = await res.json();
+        if(data.Response === "True"){
+          return data;
+        } else {
+          throw new Error(data.Error);
         }
-        starsHtml += `<span class="${className}" data-value="${i}">&#9733;</span>`;
+      } catch(err) {
+        console.error(err);
+        return null;
       }
-      c.innerHTML = `
-        <img src="${m.image_url || ''}" alt="${m.movie_name}">
-        <h2>${m.movie_name}</h2>
-        <p><strong>Year:</strong> ${m.year} | <strong>Genre:</strong> ${m.genre}</p>
-        <p><strong>Director:</strong> ${m.director}</p>
-        <p>${m.movie_info}</p>
-        <p><strong>MCDB Rating:</strong> <span id="avgRating">${avg || 'Not yet rated'}</span></p>
-        <div id="ratingForm">${starsHtml}</div>
+    }
+
+    function renderMovie(movie) {
+      if(!movie){
+        container.innerHTML = '<p>Movie information not found.</p>';
+;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="poster">
+          <img src="${movie.Poster !== "N/A" ? movie.Poster : 'https://via.placeholder.com/300x450?text=No+Image'}" alt="${movie.Title}" />
+        </div>
+        <div class="details">
+          <h1>${movie.Title} (${movie.Year})</h1>
+          <p><strong>Genre:</strong> ${movie.Genre}</p>
+          <p><strong>Director:</strong> ${movie.Director}</p>
+          <p><strong>Stars:</strong> ${movie.Actors}</p>
+          <p><strong>Runtime:</strong> ${movie.Runtime}</p>
+          <p><strong>IMDB Rating:</strong> ${movie.imdbRating} / 10 ${getStarRating(movie.imdbRating)}</p>
+          <p><strong>Plot Summary:</strong> ${movie.Plot}</p>
+          <p><strong>Release Date:</strong> ${movie.Released}</p>
+          <p><strong>Language:</strong> ${movie.Language}</p>
+          <p><strong>Country:</strong> ${movie.Country}</p>
+          <p><strong>Awards:</strong> ${movie.Awards}</p>
+        </div>
       `;
-
-      document.querySelectorAll('#ratingForm .star').forEach(s => {
-        s.addEventListener('click', async () => {
-          const val = Number(s.dataset.value);
-          document.querySelectorAll('#ratingForm .star').forEach(x =>
-            x.classList.toggle('selected', Number(x.dataset.value) <= val)
-          );
-          const auth = await fetch('/me');
-          if (!auth.ok) return alert('Please login first.');
-          await fetch('/rate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ movie_id: movieId, starpoint: val })
-          });
-          const upd = await fetch(`/movie/${movieId}`);
-          if (upd.ok) {
-            const data = await upd.json();
-            document.getElementById('avgRating').textContent = data.average_rating || 'Not yet rated';
-            renderDetail(data);
-          }
-          fetchComments(currentMovieName);
-        });
-      });
-
-      fetchComments(currentMovieName);
-
-      // Similar Movies kısmını çağır
-      fetchSimilarMovies(m.genre, m.id);
     }
 
-    async function fetchComments(movieName) {
-      const res = await fetch(`/comments?movie_name=${encodeURIComponent(movieName)}`);
-      if (!res.ok) return;
-      const list = await res.json();
-      const container = document.getElementById('commentList');
-      container.innerHTML = '';
-      list.forEach(cmt => {
-        const div = document.createElement('div');
-        div.className = 'comment';
-        div.innerHTML = `
-          <strong>${cmt.username}</strong>: ${cmt.comment}
-          <div class="comment-rating" data-comment-id="${cmt.id}"></div>
-        `;
-        container.appendChild(div);
-
-        
-        renderCommentStars(
-          div.querySelector('.comment-rating'),
-          cmt.id,
-          cmt.avg_starpoint,
-          cmt.my_starpoint
-        );
-      });
+    if(!imdbID){
+      container.innerHTML = '<p>A valid movie ID could not be found.</p>';
+    } else {
+      fetchMovieDetails(imdbID).then(renderMovie);
     }
 
-    function renderCommentStars(container, commentId, avg, my) {
-      const stars = [];
-      const userCanRate = !!currentUser;
-      const userVal = my ? Number(my) : 0;
-      for (let i = 1; i <= 5; i++) {
-        const starClass = [
-          'comment-star',
-          userVal >= i ? 'selected' : '',
-          !userVal && avg >= i ? 'avg' : ''
-        ].join(' ');
-        stars.push(`<span class="${starClass.trim()}" data-value="${i}">&#9733;</span>`);
-      }
-      let label = '';
-      if (avg) label += `<span class="comment-rating-label">mcdb comment rate: ${avg}</span>`;
-      if (userVal) label += `<span class="comment-rating-label">(You rate: ${userVal})</span>`;
+    function getStarRating(imdbRating) {
+  const maxStars = 5;
+  const rating = parseFloat(imdbRating);
+  if (isNaN(rating)) return '';
 
-      container.innerHTML = stars.join('') + label;
+  const stars = rating / 2; 
 
-      if (userCanRate) {
-        container.querySelectorAll('.comment-star').forEach(star => {
-          star.style.cursor = 'pointer';
-          star.onclick = async function () {
-            const auth = await fetch('/me');
-            if (!auth.ok) {
-              alert('Please login first.');
-              return;
-            }
-            const val = Number(this.dataset.value);
-            await fetch('/rate-comment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ comment_id: commentId, starpoint: val })
-            });
-            fetchComments(currentMovieName);
-          };
-        });
-      }
-    }
+  const fullStars = Math.floor(stars);
+  const halfStar = (stars - fullStars) >= 0.5 ? 1 : 0;
+  const emptyStars = maxStars - fullStars - halfStar;
 
-    document.getElementById('commentForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const comment = e.target.comment.value.trim();
-      if (!comment) return;
-      const auth = await fetch('/me');
-      if (!auth.ok) return alert('Please login first.');
-      await fetch('/comment', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ movie_name: currentMovieName, comment })
-      });
-      e.target.reset();
-      fetchComments(currentMovieName);
-    });
+  let starHTML = '<span class="star-rating">';
+  for (let i = 0; i < fullStars; i++) {
+    starHTML += '<span class="full">★</span>';
+  }
+  if (halfStar) {
+    starHTML += '<span class="half">★</span>';  
+  }
+  for (let i = 0; i < emptyStars; i++) {
+    starHTML += '<span class="empty">☆</span>';
+  }
+  starHTML += '</span>';
 
-    
-    async function fetchSimilarMovies(genre, excludeId) {
-      const similarDiv = document.getElementById('similarMovies');
-      similarDiv.innerHTML = '<p>Loading...</p>';
-      if (!genre) {
-        similarDiv.innerHTML = '<p>No similar movies found.</p>';
-        return;
-      }
-      
-      const mainGenre = genre.split(',')[0].trim();
-      const res = await fetch(`/similar-movies?genre=${encodeURIComponent(mainGenre)}&exclude=${excludeId}`);
-      if (!res.ok) {
-        similarDiv.innerHTML = '<p>No similar movies found.</p>';
-        return;
-      }
-      const movies = await res.json();
-      if (!movies.length) {
-        similarDiv.innerHTML = '<p>No similar movies found.</p>';
-        return;
-      }
-      similarDiv.innerHTML = movies.map(m =>
-        `<div class="similar-movie">
-          <a href="movie.html?id=${m.id}" class="similar-movie-title">
-            <img src="${m.image_url || ''}" alt="${m.movie_name}" />
-            ${m.movie_name}
-          </a>
-        </div>`
-      ).join('');
-    }
+  return starHTML;
+}
+
+
+
+
   </script>
+
 </body>
 </html>
+
+ 
