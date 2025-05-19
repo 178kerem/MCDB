@@ -6,14 +6,26 @@ const path = require('path');
 const session = require('express-session');
 
 const app = express();
-app.use(cors());
+
+
+app.use(cors({
+  origin: 'http://localhost:3000', // frontend adresin buysa bu, değilse frontend adresini gir
+  credentials: true                // cookie ve session için mutlaka gerekli!
+}));
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 app.use(session({
   secret: 'secret-key',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax', // prod için gerekirse 'none' + secure:true yaparsın
+    secure: false    // HTTPS değilse false, HTTPS ise true
+  }
 }));
 
 const db = mysql.createConnection({
@@ -27,7 +39,7 @@ db.connect(err => {
   console.log('MySQL connection successful!');
 });
 
-// Kayıt endpoint'i
+
 app.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
   try {
@@ -42,7 +54,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Giriş endpoint'i
+
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
   const sql = 'SELECT * FROM users WHERE email = ?';
@@ -57,18 +69,18 @@ app.post('/login', (req, res) => {
   });
 });
 
-// Oturum bilgisi
+
 app.get('/me', (req, res) => {
   if (req.session.user) return res.json(req.session.user);
   res.status(401).send('Not logged in');
 });
 
-// Çıkış
+
 app.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/login.html'));
 });
 
-// Profil güncelleme
+
 app.post('/update-profile', async (req, res) => {
   const { username, currentPassword, newPassword, confirmPassword } = req.body;
   const userId = req.session.user?.id;
@@ -103,7 +115,7 @@ app.post('/update-profile', async (req, res) => {
   });
 });
 
-// Film arama (isim veya kategori)
+
 app.get('/search', (req, res) => {
   const { query, genre } = req.query;
   let sql, params;
@@ -116,6 +128,7 @@ app.get('/search', (req, res) => {
       LEFT JOIN movie_images i ON m.movie_name=i.movie_name
       WHERE m.genre LIKE ?
       GROUP BY m.id
+      ORDER BY average_rating DESC
     `;
     params = [`%${genre}%`];
   } else if (query) {
@@ -138,7 +151,7 @@ app.get('/search', (req, res) => {
   });
 });
 
-// Top 5 filmler
+
 app.get('/top5', (req, res) => {
   const sql = `
     SELECT m.*, ROUND(AVG(r.starpoint),2) AS average_rating,
@@ -156,7 +169,7 @@ app.get('/top5', (req, res) => {
   });
 });
 
-// Tek film detayı
+
 app.get('/movie/:id', (req, res) => {
   const id = req.params.id;
   const sql = `
@@ -175,7 +188,7 @@ app.get('/movie/:id', (req, res) => {
   });
 });
 
-// Film puanlama
+
 app.post('/rate', (req, res) => {
   const userId = req.session.user?.id;
   const { movie_id, starpoint } = req.body;
@@ -201,7 +214,7 @@ app.post('/rate', (req, res) => {
   });
 });
 
-// Yorum ekleme
+
 app.post('/comment', (req, res) => {
   const user = req.session.user;
   if (!user) return res.status(401).send('Not logged in');
@@ -214,24 +227,71 @@ app.post('/comment', (req, res) => {
   });
 });
 
-// Yorum listeleme
+
 app.get('/comments', (req, res) => {
   const movieName = req.query.movie_name;
+  const userId = req.session.user?.id || null;
   if (!movieName) return res.status(400).send('Movie name missing');
-  const sql = 'SELECT username, comment, created_at FROM comments WHERE movie_name = ? ORDER BY created_at DESC';
-  db.query(sql, [movieName], (err, results) => {
+  const sql = `
+    SELECT c.id, c.username, c.comment, c.created_at,
+           ROUND(AVG(cr.starpoint), 2) AS avg_starpoint,
+           MAX(CASE WHEN cr.user_id = ? THEN cr.starpoint ELSE NULL END) AS my_starpoint
+    FROM comments c
+      LEFT JOIN comment_ratings cr ON c.id = cr.comment_id
+    WHERE c.movie_name = ?
+    GROUP BY c.id
+    ORDER BY c.created_at DESC
+  `;
+  db.query(sql, [userId, movieName], (err, results) => {
     if (err) return res.status(500).send('Could not retrieve comments');
     res.json(results);
   });
 });
 
-// Kullanıcının yorumları
+
+app.post('/rate-comment', (req, res) => {
+  const userId = req.session.user?.id;
+  const { comment_id, starpoint } = req.body;
+  if (!userId) return res.status(401).send('Not logged in');
+  if (!comment_id || starpoint == null || isNaN(starpoint) || starpoint < 0 || starpoint > 5) {
+    return res.status(400).send('Invalid data');
+  }
+  const sql = `
+    INSERT INTO comment_ratings (comment_id, user_id, starpoint)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE starpoint=VALUES(starpoint)
+  `;
+  db.query(sql, [comment_id, userId, starpoint], err => {
+    if (err) return res.status(500).send('Rating failed');
+    res.send('Comment rating saved');
+  });
+});
+
+
 app.get('/comments/user', (req, res) => {
   const username = req.query.username;
   if (!username) return res.status(400).send('Username missing');
   const sql = 'SELECT movie_name, comment, created_at FROM comments WHERE username = ? ORDER BY created_at DESC';
   db.query(sql, [username], (err, results) => {
     if (err) return res.status(500).send('Could not retrieve user comments');
+    res.json(results);
+  });
+});
+
+-
+app.get('/similar-movies', (req, res) => {
+  const genre = req.query.genre;
+  const excludeId = req.query.exclude;
+  if (!genre) return res.status(400).send('Genre missing');
+  const sql = `
+    SELECT m.id, m.movie_name, ANY_VALUE(i.image_url) AS image_url
+    FROM movies m
+      LEFT JOIN movie_images i ON m.movie_name = i.movie_name
+    WHERE m.genre LIKE ? AND m.id != ?
+    LIMIT 5
+  `;
+  db.query(sql, [`%${genre}%`, excludeId], (err, results) => {
+    if (err) return res.status(500).send('Database error');
     res.json(results);
   });
 });
