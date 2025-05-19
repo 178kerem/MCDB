@@ -2,147 +2,276 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MCDB - Home</title>
-  <link rel="stylesheet" href="style.css">
+  <title>MCDB</title>
   <style>
-    .popular-section h2 {
-      text-align: center;  
+    body {
+      font-family: Arial, sans-serif;
+      padding: 0;
+      margin: 0;
+      background-color: #2b2b2b;
+      color: #fff;
+    }
+    header {
+      background-color: #1c1c1c;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    .category-dropdown {
+      position: absolute;
+      left: 20px;
+    }
+    .category-button {
+      color: #ffcc00;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background-color: #1c1c1c;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+    .dropdown-content a {
+      display: block;
+      color: #ffcc00;
+      text-decoration: none;
+      margin: 5px 0;
+    }
+    .dropdown-content a:hover {
+      text-decoration: underline;
+    }
+    .header-title {
+      margin: 0 auto;
+      font-size: 28px;
+      color: #ffcc00;
+      cursor: pointer;
+    }
+    .profile-link {
+      color: #ffcc00;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .search-container {
+      display: flex;
+      justify-content: center;
+      margin: 30px 0;
+    }
+    #searchInput {
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+      border-radius: 5px 0 0 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 0 5px 5px 0;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #results, #top5 {
+      padding: 0 30px 30px;
+    }
+    .movie, .top-movie {
+      background: #1c1c1c;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .movie img, .top-movie img {
+      width: 150px;
+      height: 225px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .movie-details {
+      flex: 1;
+    }
+    .movie h3, .top-movie h3 {
+      margin-top: 0;
+      color: #ffcc00;
+    }
+    .movie p, .top-movie p {
+      margin: 5px 0;
+      line-height: 1.4;
+    }
+    .star {
+      font-size: 24px;
+      cursor: pointer;
+      color: #ccc;
+    }
+    .star.selected {
+      color: gold;
+    }
+    #top5-section {
+      padding: 20px 30px;
+    }
+    #top5-section h2 {
+      color: #ffcc00;
+      border-bottom: 2px solid #ffcc00;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
     }
   </style>
 </head>
-<body class="background">
+<body>
 
   <header>
-    <div class="top-bar">
-      <button class="menu-btn">☰ Categories</button>
-      <h1><a href="index.html" style="text-decoration: none; color: inherit;">MCDB</a></h1>
-      <a href="Sign-Login.html" class="login-btn">LOGIN</a>
+    <div class="category-dropdown">
+      <span id="categoryButton" class="category-button">Category</span>
+      <div id="categoryDropdown" class="dropdown-content">
+        <a href="#" onclick="filterByGenre('Drama')">Drama</a>
+        <a href="#" onclick="filterByGenre('Action')">Action</a>
+        <a href="#" onclick="filterByGenre('Crime')">Crime</a>
+        <a href="#" onclick="filterByGenre('Thriller')">Thriller</a>
+        <a href="#" onclick="filterByGenre('Sci-Fi')">Sci-Fi</a>
+      </div>
     </div>
+    <h1 class="header-title" onclick="location.href='index.html'">MCDB</h1>
+    <a class="profile-link" id="profileLink" href="login.html">Login</a>
   </header>
 
-  <main>
-    <section class="search-bar">
-      <input type="text" id="searchInput" placeholder="Search...">
-      <div class="toggle-scene" id="searchButton">
-        <svg id="cord" width="2" height="100%" viewBox="0 0 2 100" style="stroke:black; stroke-width:2;">
-          <line x1="1" y1="0" x2="1" y2="100"></line>
-        </svg>
-        <div class="bulb">💡</div>
-      </div>
-    </section>
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Enter movie name..." />
+    <button onclick="searchMovie()">Search</button>
+  </div>
 
-    <div id="searchResults"></div>
+  <div id="results"></div>
 
-    <section class="popular-section">
-      <h2>Popular Movies</h2>
-      <div class="movie-list" id="movieList">
-        
-      </div>
-    </section>
-    
-  </main>
+  <div id="top5-section">
+    <h2>Top 5 Movies</h2>
+    <div id="top5"></div>
+  </div>
 
   <script>
-    const searchButton = document.getElementById("searchButton");
-    const bulb = searchButton.querySelector(".bulb");
-    const cord = document.getElementById("cord").querySelector("line");
-    let isDragging = false;
-    let startY = 0;
-  
-    bulb.addEventListener("mousedown", (e) => {
-      isDragging = true;
-      startY = e.clientY;
-    });
-  
-    window.addEventListener("mousemove", (e) => {
-      if (isDragging) {
-        const diff = e.clientY - startY;
-        if (diff > 0 && diff < 200) {  
-          bulb.style.top = `calc(90% + ${diff}px)`;
-          cord.setAttribute("y2", 100 + diff);  
-        }
-        if (diff > 50) {  
-          startSearch();
-          resetBulb();
-          isDragging = false;
-        }
+    
+    fetch('/me').then(async res => {
+      if (res.ok) {
+        const user = await res.json();
+        const link = document.getElementById('profileLink');
+        link.textContent = user.username;
+        link.href = 'profile.html';
       }
     });
-  
-    window.addEventListener("mouseup", () => {
-      if (isDragging) {
-        resetBulb();
-        isDragging = false;
-      }
+
+   
+    document.getElementById('categoryButton').addEventListener('click', () => {
+      const dd = document.getElementById('categoryDropdown');
+      dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
     });
-  
-    function startSearch() {
-      const query = document.getElementById("searchInput").value;
-      const apiKey = "b088ca7";  
-  
-      fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${query}`)
-        .then(response => response.json())
-        .then(data => {
-          const resultDiv = document.getElementById("searchResults");
-          resultDiv.innerHTML = "";
-  
-          if (data.Response === "True") {
-            data.Search.forEach(movie => {
-              const movieHTML = `
-                <a href="movie.html?id=${movie.imdbID}" class="movie-card">
-                  <img src="${movie.Poster !== 'N/A' ? movie.Poster : 'placeholder.jpg'}" alt="${movie.Title}">
-                  <p>${movie.Title} (${movie.Year})</p>
-                </a>
-              `;
-              resultDiv.innerHTML += movieHTML;
-            });
-          } else {
-            resultDiv.innerHTML = "<p>No results found.</p>";
-          }
-        })
-        .catch(error => {
-          console.error("Error:", error);
-        });
-    }
-  
-    function resetBulb() {
-      bulb.style.top = "90%";  
-      cord.setAttribute("y2", 100);  
+
+    
+    async function searchMovie(term = null, isGenre = false) {
+      let url;
+      if (isGenre) {
+        url = `/search?genre=${encodeURIComponent(term)}`;
+      } else {
+        const q = term || document.getElementById('searchInput').value.trim();
+        if (!q) return alert("Please enter a movie name.");
+        url = `/search?query=${encodeURIComponent(q)}`;
+      }
+
+      const res = await fetch(url);
+      if (!res.ok) {
+        alert("Error occurred during movie search.");
+        return;
+      }
+      const movies = await res.json();
+      renderMovies(movies, document.getElementById('results'));
+      enableRatingHandlers();
     }
 
-     
-    function fetchPopularMovies() {
-      const apiKey = "b088ca7";  
-      const popularMovieIds = [
-        "tt1375666", "tt0816692", "tt0499549", 
-        "tt0076759", "tt0133093", "tt0110912"
-      ];
+    function filterByGenre(genre) {
+      document.getElementById('categoryDropdown').style.display = 'none';
+      searchMovie(genre, true);
+    }
 
-      const movieListDiv = document.getElementById("movieList");
-      movieListDiv.innerHTML = "";  
-
-      popularMovieIds.forEach(movieId => {
-        fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${movieId}`)
-          .then(response => response.json())
-          .then(data => {
-            const movieHTML = `
-              <a href="movie.html?id=${data.imdbID}" class="movie-card">
-                <img src="${data.Poster !== 'N/A' ? data.Poster : 'placeholder.jpg'}" alt="${data.Title}">
-                <p>${data.Title} (${data.Year})</p>
-              </a>
-            `;
-            movieListDiv.innerHTML += movieHTML;
-          })
-          .catch(error => {
-            console.error("Error fetching movie:", error);
-          });
+    function renderMovies(movies, container) {
+      container.innerHTML = "";
+      if (movies.length === 0) {
+        container.innerHTML = "<p>No movies found.</p>";
+        return;
+      }
+      movies.forEach(movie => {
+        const div = document.createElement("div");
+        div.className = container.id === 'top5' ? 'top-movie' : 'movie';
+        div.innerHTML = `
+          <img src="${movie.image_url ?? ''}" alt="${movie.movie_name}" />
+          <div class="movie-details">
+            <h3><a href="movie.html?id=${movie.id}" style="color:#ffcc00;text-decoration:none;">${movie.movie_name}</a></h3>
+            <p><strong>Year:</strong> ${movie.year} | <strong>Genre:</strong> ${movie.genre}</p>
+            <p><strong>Director:</strong> ${movie.director}</p>
+            <p>${movie.movie_info}</p>
+            <p><strong>Average Rating:</strong> <span class="avg-rating">${movie.average_rating ?? "Not yet rated"}</span></p>
+            ${container.id !== 'top5' ? `
+              <div class="rating-form" data-id="${movie.id}">
+                ${[1,2,3,4,5].map(n=>`<span class="star" data-value="${n}">&#9733;</span>`).join('')}
+              </div>` : ''}
+          </div>
+        `;
+        container.appendChild(div);
       });
     }
 
-     
-    window.onload = fetchPopularMovies;
+    function enableRatingHandlers() {
+      document.querySelectorAll('.rating-form').forEach(form => {
+        const movieId = form.dataset.id;
+        form.querySelectorAll('.star').forEach(star => {
+          star.addEventListener('click', async () => {
+            const val = +star.dataset.value;
+            form.querySelectorAll('.star').forEach(s => {
+              s.classList.toggle('selected', +s.dataset.value <= val);
+            });
+
+            const check = await fetch('/me');
+            if (!check.ok) return alert("Please login to rate movies.");
+
+            const res = await fetch('/rate', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({ movie_id: movieId, starpoint: val })
+            });
+            if (res.ok) {
+              const avgSpan = form.parentElement.querySelector('.avg-rating');
+              const updated = await fetch(`/movie/${movieId}`);
+              if (updated.ok) {
+                const data = await updated.json();
+                avgSpan.textContent = data.average_rating ?? "Not yet rated";
+              }
+              fetchTop5Movies();
+            } else {
+              alert("Error: " + await res.text());
+            }
+          });
+        });
+      });
+    }
+
+    async function fetchTop5Movies() {
+      const res = await fetch('/top5');
+      if (!res.ok) return console.error("Error fetching Top 5 movies.");
+      renderMovies(await res.json(), document.getElementById('top5'));
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchTop5Movies();
+    });
   </script>
-  
+
 </body>
 </html>

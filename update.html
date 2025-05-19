@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Update Profile</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #2b2b2b;
+      color: #fff;
+    }
+
+    header {
+      background-color: #1c1c1c;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+
+    .header-left a {
+      color: #ffcc00;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .header-center h1 {
+      margin: 0;
+      font-size: 28px;
+      color: #ffcc00;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #1c1c1c;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+      color: #ffcc00;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .error {
+      color: red;
+      margin-bottom: 10px;
+    }
+
+    .header-left, .header-center {
+      flex: 1;
+    }
+
+    .header-left {
+      text-align: left;
+    }
+
+    .header-center {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <a href="profile.html">&larr; Back to Profile</a>
+    </div>
+    <div class="header-center">
+      <h1 onclick="window.location.href='index.html'">MCDB</h1>
+    </div>
+    <div class="header-left"></div>
+  </header>
+
+  <div class="container">
+    <h2>Update Profile</h2>
+    <div id="error" class="error"></div>
+    <form id="updateForm">
+      <input type="text" name="username" placeholder="New Username">
+      <input type="password" name="currentPassword" placeholder="Current Password">
+      <input type="password" name="newPassword" placeholder="New Password">
+      <input type="password" name="confirmPassword" placeholder="Confirm New Password">
+      <button type="submit">Update</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('updateForm');
+    const errorDiv = document.getElementById('error');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorDiv.textContent = '';
+
+      const formData = new FormData(form);
+      const data = {
+        username: formData.get('username'),
+        currentPassword: formData.get('currentPassword'),
+        newPassword: formData.get('newPassword'),
+        confirmPassword: formData.get('confirmPassword')
+      };
+
+      const res = await fetch('/update-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      const text = await res.text();
+      if (res.ok) {
+        alert(text);
+        window.location.href = 'profile.html';
+      } else {
+        errorDiv.textContent = text;
+      }
+    });
+  </script>
+</body>
+</html>

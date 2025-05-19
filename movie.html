@@ -1,65 +1,143 @@
- 
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Movie Details</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Movie Detail</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #2b2b2b; color: #fff; margin: 0; padding: 0; }
+    header { background: #1c1c1c; padding: 20px; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+    .header-title { margin: 0 auto; color: #ffcc00; font-size: 28px; cursor: pointer; }
+    .profile-link { color: #ffcc00; font-weight: bold; text-decoration: none; font-size: 16px; }
+    #details { padding: 30px; overflow: auto; }
+    #details img { width: 200px; height: 300px; object-fit: cover; border-radius: 8px; float: left; margin-right: 20px; }
+    #details h2 { color: #ffcc00; margin-top: 0; }
+    #details p { margin: 10px 0; line-height: 1.4; }
+    .star { font-size: 24px; cursor: pointer; color: #ccc; }
+    .star.selected { color: gold; }
+    #ratingForm { margin-top: 20px; clear: both; }
+    #commentsSection { padding: 30px; clear: both; }
+    #commentList .comment { background: #333; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    #commentForm textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    #commentForm button { margin-top: 10px; padding: 10px 20px; background: #ffcc00; border: none; cursor: pointer; font-weight: bold; }
+  </style>
 </head>
-<body class="background">
-  <header class="top-bar">
-    <a href="index.html">← Back to Search</a>
-    <h1 id="movie-title">Movie Title</h1>
+<body>
+  <header>
+    <h1 class="header-title" onclick="location.href='index.html'">MCDB</h1>
+    <a class="profile-link" id="profileLink" href="login.html">Login</a>
   </header>
 
-  <main class="movie-page">
-    <div class="left-panel">
-      <img id="movie-poster" src="" alt="Poster" />
-    </div>
-    <div class="middle-panel">
-      <div class="movie-info-box">
-        <h2>Movie Information</h2>
-        <p id="movie-plot"></p>
-        <p><strong>Year:</strong> <span id="movie-year"></span></p>
-        <p><strong>Genre:</strong> <span id="movie-genre"></span></p>
-        <p><strong>Director:</strong> <span id="movie-director"></span></p>
-        <p><strong>Actors:</strong> <span id="movie-actors"></span></p>
-      </div>
-    </div>
-    <div class="right-panel">
-      <h3>MCDb Rating</h3>
-      <p>⭐ <span id="movie-rating">N/A</span></p>
-      <a href="#" class="similar-movies">Similar movies →</a>
-    </div>
-  </main>
+  <div id="details"><p>Loading...</p></div>
 
-  <section class="comments-section">
-    <h3>Comments</h3>
-    <div class="comment-box">
-      <p><strong>Adem:</strong><br>Çok güzel film</p>
-      <p><strong>Kerim:</strong><br>Great movie! I strongly suggest to watch.</p>
-    </div>
-  </section>
+  <div id="commentsSection">
+    <h3 style="color:#ffcc00;">Comments</h3>
+    <div id="commentList"></div>
+    <form id="commentForm">
+      <textarea name="comment" rows="3" placeholder="Write your comment..."></textarea>
+      <button type="submit">Post Comment</button>
+    </form>
+  </div>
 
   <script>
+    fetch('/me').then(async r => {
+      if (r.ok) {
+        const user = await r.json();
+        const link = document.getElementById('profileLink');
+        link.textContent = user.username;
+        link.href = 'profile.html';
+      }
+    });
+
     const params = new URLSearchParams(window.location.search);
     const movieId = params.get('id');
-    const apiKey = "b088ca7";
+    let currentMovieName = '';
 
-    fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${movieId}`)
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('movie-title').textContent = data.Title;
-        document.getElementById('movie-poster').src = data.Poster !== 'N/A' ? data.Poster : 'placeholder.jpg';
-        document.getElementById('movie-year').textContent = data.Year;
-        document.getElementById('movie-genre').textContent = data.Genre;
-        document.getElementById('movie-director').textContent = data.Director;
-        document.getElementById('movie-actors').textContent = data.Actors;
-        document.getElementById('movie-plot').textContent = data.Plot;
-        document.getElementById('movie-rating').textContent = data.imdbRating;
+    if (!movieId) {
+      document.getElementById('details').innerHTML = '<p>Movie not found.</p>';
+    } else {
+      fetchMovieDetail();
+    }
+
+    async function fetchMovieDetail() {
+      const res = await fetch(`/movie/${movieId}`);
+      if (!res.ok) {
+        document.getElementById('details').innerHTML = '<p>Loading error.</p>';
+        return;
+      }
+      const m = await res.json();
+      renderDetail(m);
+    }
+
+    function renderDetail(m) {
+      currentMovieName = m.movie_name;
+      const c = document.getElementById('details');
+      let starsHtml = '';
+      for (let i = 1; i <= 5; i++) {
+        starsHtml += `<span class="star" data-value="${i}">&#9733;</span>`;
+      }
+      c.innerHTML = `
+        <img src="${m.image_url || ''}" alt="${m.movie_name}">
+        <h2>${m.movie_name}</h2>
+        <p><strong>Year:</strong> ${m.year} | <strong>Genre:</strong> ${m.genre}</p>
+        <p><strong>Director:</strong> ${m.director}</p>
+        <p>${m.movie_info}</p>
+        <p><strong>Average Rating:</strong> <span id="avgRating">${m.average_rating || 'Not yet rated'}</span></p>
+        <div id="ratingForm">${starsHtml}</div>
+      `;
+
+      document.querySelectorAll('#ratingForm .star').forEach(s => {
+        s.addEventListener('click', async () => {
+          const val = Number(s.dataset.value);
+          document.querySelectorAll('#ratingForm .star').forEach(x =>
+            x.classList.toggle('selected', Number(x.dataset.value) <= val)
+          );
+          const auth = await fetch('/me');
+          if (!auth.ok) return alert('Please login first.');
+          await fetch('/rate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ movie_id: movieId, starpoint: val })
+          });
+          const upd = await fetch(`/movie/${movieId}`);
+          if (upd.ok) {
+            const data = await upd.json();
+            document.getElementById('avgRating').textContent = data.average_rating || 'Not yet rated';
+          }
+          fetchComments(currentMovieName);
+        });
       });
+
+      fetchComments(currentMovieName);
+    }
+
+    async function fetchComments(movieName) {
+      const res = await fetch(`/comments?movie_name=${encodeURIComponent(movieName)}`);
+      if (!res.ok) return;
+      const list = await res.json();
+      const container = document.getElementById('commentList');
+      container.innerHTML = '';
+      list.forEach(cmt => {
+        const div = document.createElement('div');
+        div.className = 'comment';
+        div.innerHTML = `<strong>${cmt.username}</strong>: ${cmt.comment}`;
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById('commentForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const comment = e.target.comment.value.trim();
+      if (!comment) return;
+      const auth = await fetch('/me');
+      if (!auth.ok) return alert('Please login first.');
+      await fetch('/comment', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ movie_name: currentMovieName, comment })
+      });
+      e.target.reset();
+      fetchComments(currentMovieName);
+    });
   </script>
 </body>
 </html>
-
- 

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Registration Form</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #2b2b2b;
+      color: #fff;
+    }
+
+    header {
+      background-color: #1c1c1c;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+      color: #ffcc00;
+      cursor: pointer;
+    }
+
+    .back-link {
+      position: absolute;
+      left: 20px;
+      color: #ffcc00;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 60px auto;
+      background-color: #1c1c1c;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+      text-align: center;
+      color: #ffcc00;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #result {
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a class="back-link" href="login.html">&larr; Back to Login</a>
+    <h1 onclick="window.location.href='index.html'">MCDB</h1>
+  </header>
+
+  <div class="container">
+    <h2>User Registration</h2>
+    <form id="registerForm">
+      <label>Username:</label>
+      <input type="text" name="username" required>
+
+      <label>Email:</label>
+      <input type="email" name="email" required>
+
+      <label>Password:</label>
+      <input type="password" name="password" required>
+
+      <label>Confirm Password:</label>
+      <input type="password" name="confirmPassword" required>
+
+      <button type="submit">Register</button>
+    </form>
+
+    <p id="result"></p>
+  </div>
+
+  <script>
+    const form = document.getElementById("registerForm");
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+
+      const password = formData.get("password");
+      const confirmPassword = formData.get("confirmPassword");
+      const result = document.getElementById("result");
+
+      if (password !== confirmPassword) {
+        result.style.color = 'red';
+        result.textContent = "Passwords do not match.";
+        return;
+      }
+
+      const data = {
+        username: formData.get("username"),
+        email: formData.get("email"),
+        password
+      };
+
+      try {
+        const response = await fetch("http://localhost:3000/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        });
+
+        const text = await response.text();
+
+        if (response.ok) {
+          // Registration succeeded, redirect to login page
+          window.location.href = 'login.html';
+        } else {
+          result.style.color = 'red';
+          result.textContent = text;
+        }
+      } catch (err) {
+        result.style.color = 'red';
+        result.textContent = "Error connecting to server.";
+      }
+    });
+  </script>
+
+</body>
+</html>

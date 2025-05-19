@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #2b2b2b;
+      color: #fff;
+    }
+
+    header {
+      background-color: #1c1c1c;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+      color: #ffcc00;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background-color: #1c1c1c;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+      color: #ffcc00;
+    }
+
+    p {
+      font-size: 18px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 16px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    a button {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Yeni yorumlar bölümü */
+    #userComments {
+      margin-top: 30px;
+    }
+    #userComments h3 {
+      color: #ffcc00;
+      border-bottom: 2px solid #ffcc00;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .comment-item {
+      background: #333;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    .comment-item strong {
+      color: #ffcc00;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 onclick="window.location.href='index.html'">MCDB</h1>
+  </header>
+
+  <div class="container">
+    <h2>Welcome, <span id="username"></span>!</h2>
+    <p>Your email: <span id="email"></span></p>
+
+    <br>
+    <a href="update.html"><button>Update Profile</button></a>
+    <button id="logoutBtn">Logout</button>
+
+    <!-- Kullanıcının yorumları -->
+    <div id="userComments">
+      <h3>Your Comments</h3>
+      <div id="commentList"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    fetch('/me')
+      .then(res => {
+        if (!res.ok) {
+          window.location.href = '/login.html';
+          return;
+        }
+        return res.json();
+      })
+      .then(user => {
+        if (!user) return;
+        currentUser = user.username;
+        document.getElementById('username').textContent = user.username;
+        document.getElementById('email').textContent = user.email;
+        loadUserComments();
+      })
+      .catch(() => {
+        window.location.href = '/login.html';
+      });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      fetch('/logout').then(() => {
+        window.location.href = '/login.html';
+      });
+    });
+
+    async function loadUserComments() {
+      const res = await fetch(`/comments/user?username=${encodeURIComponent(currentUser)}`);
+      if (!res.ok) {
+        console.error('Yorumlar alınamadı');
+        return;
+      }
+      const comments = await res.json();
+      const container = document.getElementById('commentList');
+      container.innerHTML = '';
+      comments.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'comment-item';
+        div.innerHTML = `<strong>${c.movie_name}</strong>: ${c.comment}`;
+        container.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
