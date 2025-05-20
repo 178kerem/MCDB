@@ -9,8 +9,8 @@ const app = express();
 
 
 app.use(cors({
-  origin: 'http://localhost:3000', // frontend adresin buysa bu, değilse frontend adresini gir
-  credentials: true                // cookie ve session için mutlaka gerekli!
+  origin: 'http://localhost:3000', 
+  credentials: true                
 }));
 
 app.use(express.json());
@@ -23,8 +23,8 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    sameSite: 'lax', // prod için gerekirse 'none' + secure:true yaparsın
-    secure: false    // HTTPS değilse false, HTTPS ise true
+    sameSite: 'lax', 
+    secure: false    
   }
 }));
 
@@ -74,7 +74,6 @@ app.get('/me', (req, res) => {
   if (req.session.user) return res.json(req.session.user);
   res.status(401).send('Not logged in');
 });
-
 
 app.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/login.html'));
@@ -271,14 +270,22 @@ app.post('/rate-comment', (req, res) => {
 app.get('/comments/user', (req, res) => {
   const username = req.query.username;
   if (!username) return res.status(400).send('Username missing');
-  const sql = 'SELECT movie_name, comment, created_at FROM comments WHERE username = ? ORDER BY created_at DESC';
+  // movie_name ile birlikte filmin id'sini de dönüyoruz:
+  const sql = `
+    SELECT m.id, c.movie_name, c.comment, c.created_at
+    FROM comments c
+    JOIN movies m ON c.movie_name = m.movie_name
+    WHERE c.username = ?
+    ORDER BY c.created_at DESC
+  `;
   db.query(sql, [username], (err, results) => {
     if (err) return res.status(500).send('Could not retrieve user comments');
     res.json(results);
   });
 });
 
--
+
+
 app.get('/similar-movies', (req, res) => {
   const genre = req.query.genre;
   const excludeId = req.query.exclude;
